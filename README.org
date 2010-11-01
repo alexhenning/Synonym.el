@@ -1,0 +1,26 @@
+#+TITLE:     Synonym.el
+#+AUTHOR:    Alex Henning
+#+EMAIL:     elcron@gmail.com
+#+DATE:      2010-10-31 Sun
+#+LANGUAGE:  en
+#+OPTIONS:   H:3 num:t toc:t \n:nil @:t ::t |:t ^:t -:t f:t *:t <:t
+#+OPTIONS:   TeX:t LaTeX:t skip:nil d:nil todo:t pri:nil tags:not-in-toc
+
+* Introduction
+Provides an intuitive interface to access synonyms for words via =C-x t=.
+
+* Installation
+*Dependencies:* Relies on popup.el from [[http://www.emacswiki.org/emacs/AutoComplete][autocomplete.el]]; so make sure you install it and load it into your =.emacs=.
+
+1. Download synonym.el
+2. Get a key from [[http://words.bighugelabs.com/api.php][Big Huge Labs]]
+3. Load it into your =.emacs=
+#+BEGIN_SRC elisp -n -r
+  (setq *synonym-api-key* "your-key")
+
+  (add-to-list 'load-path "~/.emacs.d/synonyms/")
+  (require 'synonym)
+#+END_SRC
+4. Open emacs and type =C-x t=
+5. =C-n= and =C-p= to navigate the menu
+6. Hit enter to replace the word
