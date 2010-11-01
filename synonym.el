@@ -1,5 +1,6 @@
 
-(setq *synonym-api-key* "")
+(unless (boundp '*synonym-api-key*)
+  (error "Invalid api key."))
 
 (defun synonym-get-buffer (word)
   (url-retrieve-synchronously
@@ -38,3 +39,5 @@
   (kill-word 1))
 
 (define-key global-map (kbd "C-x t") 'synonym-show-synonyms)
+
+(provide 'synonym)

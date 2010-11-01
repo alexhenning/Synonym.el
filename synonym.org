@@ -13,8 +13,14 @@ I plan on using an API provided by [[http://words.bighugelabs.com/api.php][Big H
 
 ** Set the API key
 Not actually set for security reasons, have the users set it in ther =.emacs=.
-#+BEGIN_SRC elisp -n -r :tangle synonym.el
+#+BEGIN_SRC elisp -n -r
   (setq *synonym-api-key* "")
+#+END_SRC
+
+Check that the user defined the api key or complain.
+#+BEGIN_SRC elisp -n -r :tangle synonym.el
+  (unless (boundp '*synonym-api-key*)
+    (error "Invalid api key."))
 #+END_SRC
 
 ** Access the API
@@ -77,6 +83,10 @@ I want to show a popup with the list of synonyms for the word at the point. Line
 Bind finding synonyms to =C-x t=
 #+BEGIN_SRC elisp -n -r :tangle synonym.el
   (define-key global-map (kbd "C-x t") 'synonym-show-synonyms)
+#+END_SRC
+* Let's wrap this up
+#+BEGIN_SRC elisp -n -r :tangle synonym.el
+  (provide 'synonym)
 #+END_SRC
 * Tasks
 ** TODO Cache results
