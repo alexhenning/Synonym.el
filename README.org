@@ -12,7 +12,7 @@ Provides an intuitive interface to access synonyms for words via =C-x t=.
 * Installation
 *Dependencies:* Relies on popup.el from [[http://www.emacswiki.org/emacs/AutoComplete][autocomplete.el]]; so make sure you install it and load it into your =.emacs=.
 
-1. Download synonym.el
+1. [[http://github.com/alexhenning/Synonym.el/zipball/master][Download]] synonym.el
 2. Get a key from [[http://words.bighugelabs.com/api.php][Big Huge Labs]]
 3. Load it into your =.emacs=
 #+BEGIN_SRC elisp -n -r
