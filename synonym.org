@@ -1,0 +1,84 @@
+#+TITLE:     Synonymous: Synonyms for emacs
+#+AUTHOR:    Alex Henning
+#+EMAIL:     elcron@gmail.com
+#+DATE:      2010-10-22 Fri
+#+OPTIONS:   H:3 num:t toc:t \n:nil @:t ::t |:t ^:t -:t f:t *:t <:t
+#+OPTIONS:   TeX:t LaTeX:t skip:nil d:nil todo:t pri:nil tags:not-in-toc
+
+* Purpose:
+To provide the ability to find synonyms when writing with *EMACS*.
+
+* Accessing the API
+I plan on using an API provided by [[http://words.bighugelabs.com/api.php][Big Huge Labs]] to get synonyms.
+
+** Set the API key
+Not actually set for security reasons, have the users set it in ther =.emacs=.
+#+BEGIN_SRC elisp -n -r :tangle synonym.el
+  (setq *synonym-api-key* "")
+#+END_SRC
+
+** Access the API
+Access the api, which is simply involves accessing =http://words.bighugelabs.com/api/2/api-key/word/=.
+#+BEGIN_SRC elisp -n -r :tangle synonym.el
+  (defun synonym-get-buffer (word)
+    (url-retrieve-synchronously
+     (concat "http://words.bighugelabs.com/api/2/"
+             *synonym-api-key* "/" word "/")))
+#+END_SRC
+
+** Handle a line
+Emacs is best at text processing using buffers. This function processes a single line. The process:
+ - Delete the part of speech
+ - Check that it's a synonym
+ - If it is delete syn and get the word
+ - Move to the next line
+#+BEGIN_SRC elisp -n -r :tangle synonym.el
+  (defun synonym-handle-line ()
+    (kill-word 1)
+    (delete-char 1)
+    (setq syn? (thing-at-point 'word))
+    (if (string= syn? "syn")
+        (progn
+          (kill-word 1)
+          (delete-char 1)
+          (add-to-list 'synonym-synonyms
+                       (buffer-substring-no-properties
+                        (point) (line-end-position)))))
+    (kill-line 2))
+#+END_SRC
+
+** Get the synonyms
+Get a list on synonyms to return by processing each line of the results.
+#+BEGIN_SRC elisp -n -r :tangle synonym.el
+  (defun synonym-get-synonyms (word)
+    (setq synonym-synonyms '())
+    (save-excursion
+      (with-current-buffer (synonym-get-buffer word)
+        (goto-char (point-min))
+        (while (not (= (point-min) (point-max)))
+          (let ((l (synonym-handle-line)))
+            (if l
+                (setq synonym-synonyms l))))))
+    (reverse synonym-synonyms))
+#+END_SRC
+
+* Showing the popup
+I want to show a popup with the list of synonyms for the word at the point. Line it up with the beginning of the word. When a word is selected, replace the old word with it.
+#+BEGIN_SRC elisp -n -r :tangle synonym.el
+  (defun synonym-show-synonyms ()
+    (interactive)
+    (backward-word 1)
+    (insert (popup-menu* (synonym-get-synonyms (thing-at-point 'word))
+                         :point (point)))
+    (kill-word 1))
+#+END_SRC
+
+* Default binding
+Bind finding synonyms to =C-x t=
+#+BEGIN_SRC elisp -n -r :tangle synonym.el
+  (define-key global-map (kbd "C-x t") 'synonym-show-synonyms)
+#+END_SRC
+* Tasks
+** TODO Cache results
+* Bugs
+** TODO Does wrong word if at the beginning of the word
