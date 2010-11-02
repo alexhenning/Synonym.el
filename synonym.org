@@ -8,9 +8,47 @@
 * Purpose:
 To provide the ability to find synonyms when writing with *EMACS*.
 
+* Cache
+** Initiate the cache
+First, we need a representation of a cache. Lets go with a hash table.
+#+BEGIN_SRC elisp -n -r :tangle synonym.el
+  (defun make-cache ()
+    (make-hash-table :test 'equal))
+#+END_SRC
+** Access the cache
+Now, we want to be able access the cache. If the value isn't cached, run a function and cache that value. If there is a filename, then save the cache to the file.
+#+BEGIN_SRC elisp -n -r :tangle synonym.el
+  (defun* cache-get (key default-fn cache &key (filename nil))
+    (let ((val (gethash key cache)))
+      (if val
+          val
+        (let ((val (puthash key (funcall default-fn key) cache)))
+          (when filename
+              (cache-save filename cache))
+          val))))
+#+END_SRC
+** Save the cache 
+Let's save the cache to a file.
+#+BEGIN_SRC elisp -n -r :tangle synonym.el
+  (defun cache-save (filename cache)
+    (with-temp-buffer
+      (insert (with-output-to-string
+                (princ cache)))
+      (write-region (point-min) (point-max) filename)))
+#+END_SRC
+
+** Load the cache
+We need to load the cache from a file.
+#+BEGIN_SRC elisp -n -r :tangle synonym.el
+  (defun cache-load (filename)
+    (with-temp-buffer
+      (insert-file-contents "~/.emacs.d/synonym.cache")
+      (car (read-from-string (buffer-substring-no-properties
+                              (point-min) (point-max))))))
+#+END_SRC
+
 * Accessing the API
 I plan on using an API provided by [[http://words.bighugelabs.com/api.php][Big Huge Labs]] to get synonyms.
-
 ** Set the API key
 Not actually set for security reasons, have the users set it in ther =.emacs=.
 #+BEGIN_SRC elisp -n -r
@@ -56,7 +94,7 @@ Emacs is best at text processing using buffers. This function processes a single
 ** Get the synonyms
 Get a list on synonyms to return by processing each line of the results.
 #+BEGIN_SRC elisp -n -r :tangle synonym.el
-  (defun synonym-get-synonyms (word)
+  (defun synonym-fetch-synonyms (word)
     (setq synonym-synonyms '())
     (save-excursion
       (with-current-buffer (synonym-get-buffer word)
@@ -66,6 +104,21 @@ Get a list on synonyms to return by processing each line of the results.
             (if l
                 (setq synonym-synonyms l))))))
     (reverse synonym-synonyms))
+#+END_SRC
+
+* Load our cache
+#+BEGIN_SRC elisp -n -r :tangle synonym.el
+  (if (file-exists-p "~/.emacs.d/synonym.cache")
+      (setq synonym-cache (cache-load "~/.emacs.d/synonym.cache"))
+    (setq synonym-cache (make-cache)))
+#+END_SRC
+
+* Get the synonyms
+Either get the synonyms from the cache, if it's not there then fetch it.
+#+BEGIN_SRC elisp -n -r :tangle synonym.el
+  (defun synonym-get-synonyms (word)
+    (cache-get word 'synonym-fetch-synonyms synonym-cache
+               :filename "~/.emacs.d/synonym.cache"))
 #+END_SRC
 
 * Showing the popup

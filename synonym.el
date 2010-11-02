@@ -1,4 +1,28 @@
 
+(defun make-cache ()
+  (make-hash-table :test 'equal))
+
+(defun* cache-get (key default-fn cache &key (filename nil))
+  (let ((val (gethash key cache)))
+    (if val
+        val
+      (let ((val (puthash key (funcall default-fn key) cache)))
+        (when filename
+            (cache-save filename cache))
+        val))))
+
+(defun cache-save (filename cache)
+  (with-temp-buffer
+    (insert (with-output-to-string
+              (princ cache)))
+    (write-region (point-min) (point-max) filename)))
+
+(defun cache-load (filename)
+  (with-temp-buffer
+    (insert-file-contents "~/.emacs.d/synonym.cache")
+    (car (read-from-string (buffer-substring-no-properties
+                            (point-min) (point-max))))))
+
 (unless (boundp '*synonym-api-key*)
   (error "Invalid api key."))
 
@@ -20,7 +44,7 @@
                       (point) (line-end-position)))))
   (kill-line 2))
 
-(defun synonym-get-synonyms (word)
+(defun synonym-fetch-synonyms (word)
   (setq synonym-synonyms '())
   (save-excursion
     (with-current-buffer (synonym-get-buffer word)
@@ -30,6 +54,14 @@
           (if l
               (setq synonym-synonyms l))))))
   (reverse synonym-synonyms))
+
+(if (file-exists-p "~/.emacs.d/synonym.cache")
+    (setq synonym-cache (cache-load "~/.emacs.d/synonym.cache"))
+  (setq synonym-cache (make-cache)))
+
+(defun synonym-get-synonyms (word)
+  (cache-get word 'synonym-fetch-synonyms synonym-cache
+             :filename "~/.emacs.d/synonym.cache"))
 
 (defun synonym-show-synonyms ()
   (interactive)
