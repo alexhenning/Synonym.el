@@ -142,6 +142,8 @@ Bind finding synonyms to =C-x t=
   (provide 'synonym)
 #+END_SRC
 * Tasks
-** TODO Cache results
+** DONE Cache results
+** TODO Add easy cache building.
 * Bugs
 ** TODO Does wrong word if at the beginning of the word
+** TODO Doesn't work with a proxy (unless the word is cached)
