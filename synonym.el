@@ -7,9 +7,16 @@
     (if val
         val
       (let ((val (puthash key (funcall default-fn key) cache)))
-        (when filename
+        (when (and filename can-save-cache-p)
             (cache-save filename cache))
         val))))
+
+(setq can-save-cache-p
+      (or 
+       (and (>= emacs-major-version 23)
+            (>= emacs-minor-version 1)
+            (null (string-match "23.1.1" (version))))
+       (> emacs-major-version 23)))
 
 (defun cache-save (filename cache)
   (with-temp-buffer
@@ -55,7 +62,8 @@
               (setq synonym-synonyms l))))))
   (reverse synonym-synonyms))
 
-(if (file-exists-p "~/.emacs.d/synonym.cache")
+(if (and (file-exists-p "~/.emacs.d/synonym.cache")
+         can-save-cache-p)
     (setq synonym-cache (cache-load "~/.emacs.d/synonym.cache"))
   (setq synonym-cache (make-cache)))
 

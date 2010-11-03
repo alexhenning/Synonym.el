@@ -23,9 +23,19 @@ Now, we want to be able access the cache. If the value isn't cached, run a funct
       (if val
           val
         (let ((val (puthash key (funcall default-fn key) cache)))
-          (when filename
+          (when (and filename can-save-cache-p)
               (cache-save filename cache))
           val))))
+#+END_SRC
+** Can we save the cache?
+There's a bug in older versions of emacs where it can't read the =#= character. To fix that check which version of emacs is running version.
+#+BEGIN_SRC elisp -n -r :tangle synonym.el
+  (setq can-save-cache-p
+        (or 
+         (and (>= emacs-major-version 23)
+              (>= emacs-minor-version 1)
+              (null (string-match "23.1.1" (version))))
+         (> emacs-major-version 23)))
 #+END_SRC
 ** Save the cache 
 Let's save the cache to a file.
@@ -108,7 +118,8 @@ Get a list on synonyms to return by processing each line of the results.
 
 * Load our cache
 #+BEGIN_SRC elisp -n -r :tangle synonym.el
-  (if (file-exists-p "~/.emacs.d/synonym.cache")
+  (if (and (file-exists-p "~/.emacs.d/synonym.cache")
+           can-save-cache-p)
       (setq synonym-cache (cache-load "~/.emacs.d/synonym.cache"))
     (setq synonym-cache (make-cache)))
 #+END_SRC
@@ -147,3 +158,5 @@ Bind finding synonyms to =C-x t=
 * Bugs
 ** TODO Does wrong word if at the beginning of the word
 ** TODO Doesn't work with a proxy (unless the word is cached)
+** TODO Cache doesn't work in older versions of emacs
+Currently, I'm just disabling the cache as a work-around.
