@@ -24,3 +24,5 @@ Provides an intuitive interface to access synonyms for words via =C-x t=.
 4. Open emacs and type =C-x t=
 5. =C-n= and =C-p= to navigate the menu
 6. Hit enter to replace the word
+
+* License: WTFPL
